@@ -2,6 +2,6 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectView>ProjectFiles</ProjectView>
-    <OutputPath>C:\Users\rai\AppData\Roaming\OuterWildsModManager\OWML\Mods\Raicuparta.ModTemplate</OutputPath>
+    <OutputPath>C:\Users\bwc67\AppData\Roaming\OuterWildsModManager\OWML\Mods\Bwc9876.SaveEditor</OutputPath>
   </PropertyGroup>
 </Project>

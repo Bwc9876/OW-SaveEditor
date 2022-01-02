@@ -28,6 +28,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ModTemplate.csproj.user" />
+    <Content Include="SaveEditor.csproj.user" />
   </ItemGroup>
 </Project>
