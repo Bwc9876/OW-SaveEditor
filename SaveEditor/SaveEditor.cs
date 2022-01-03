@@ -56,6 +56,7 @@ namespace SaveEditor
         private void Start()
         {
             ModHelper.Menus.MainMenu.OnInit += MainMenuInitHook;
+            SceneManager.activeSceneChanged += SceneChangedHook;
         }
 
         private void MainMenuInitHook()
@@ -63,6 +64,13 @@ namespace SaveEditor
             _hasEchoes = CheckForDLC();
             IModButton editorButton = ModHelper.Menus.MainMenu.SwitchProfileButton.Duplicate("Edit Save Data".ToUpper());
             editorButton.OnClick += EditorButtonClickCallback;
+        }
+
+        private void SceneChangedHook()
+        {
+            if (_menuOpen) {
+                _menuOpen = false;
+            }
         }
 
         private void ConditionToggle(string label, string key)
