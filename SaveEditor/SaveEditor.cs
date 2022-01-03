@@ -1,6 +1,7 @@
 ﻿using OWML.ModHelper;
 using OWML.Common.Menus;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace SaveEditor
 {
