@@ -91,6 +91,12 @@ namespace SaveEditor
             bool learnAllSignalsClicked = GUILayout.Button("Learn All");
             bool forgetAllSignalsClicked = GUILayout.Button("Forget All");
             GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            // SHIP LOG
+            GUILayout.BeginHorizontal();
+            bool learnAllFactsClicked = GUILayout.Button("Learn All");
+            bool forgetAllFactsClicked = GUILayout.Button("Forget All");
+            GUILayout.EndHorizontal();
             GUILayout.Space(10);
             // BUTTONS
             bool saveClicked = GUILayout.Button("Save");
@@ -114,6 +120,13 @@ namespace SaveEditor
                 {
                     _saveData.knownSignals[(int)signalsKey] = false;
                 }
+            }
+
+            if (learnAllFactsClicked) {
+                // Learn All Facts
+            }
+            else if (forgetAllFactsClicked) {
+                // Forget All Facts
             }
 
             if (saveClicked)
