@@ -6,7 +6,7 @@ namespace SaveEditor
 {
     public class SaveEditor : ModBehaviour
     {
-        private static readonly int[] EditorMenuSize = {600, 260};
+        private static readonly Vector2 EditorMenuSize = new Vector2(600, 260);
 
         private bool _menuOpen;
         private bool _hasEchoes;
@@ -23,23 +23,40 @@ namespace SaveEditor
             SignalName.Quantum_TH_GroveShard, SignalName.Quantum_TH_MuseumShard
         };
 
+        private Vector2 GetMenuPosition(){
+            Vector2 centerScreen = new Vector2(Screen.width / 2, Screen.Height / 2);
+            return new Vector2(centerScreen.x - (int)EditorMenuSize.x / 2, centerScreen.y - (int)EditorMenuSize.y / 2);
+        }
+
+        private void OpenMenu(){
+            _menuOpen = true;
+            _saveData = PlayerData._currentGameSave;
+        }
+
+        private void CloseMenu(){
+            _menuOpen = false;
+            _saveData = null;
+        }
+
         private bool CheckForDLC()
         {
             return EntitlementsManager.IsDlcOwned() == EntitlementsManager.AsyncOwnershipStatus.Owned;
         }
         
-        private Texture2D MakeTex(int width, int height, Color col)
+        private Texture2D MakeMenuBackgroundTexture()
         {
-            Color[] pix = new Color[width*height];
+            Color[] pixels = new Color[EditorMenuSize.x*EditorMenuSize.y];
  
-            for(int i = 0; i < pix.Length; i++)
-                pix[i] = col;
+            for(int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = Color.black;
+            }
  
-            Texture2D result = new Texture2D(width, height);
-            result.SetPixels(pix);
-            result.Apply();
+            Texture2D newTexture = new Texture2D(EditorMenuSize.x, EditorMenuSize.y);
+            newTexture.SetPixels(pixels);
+            newTexture.Apply();
  
-            return result;
+            return newTexture;
         }
 
         private void Awake()
@@ -48,22 +65,29 @@ namespace SaveEditor
             {
                 normal =
                 {
-                    background = MakeTex(EditorMenuSize[0], EditorMenuSize[1], Color.black)
+                    background = MakeMenuBackgroundTexture()
                 }
             };
         }
 
         private void Start()
         {
+            _hasEchoes = CheckForDLC();
             ModHelper.Menus.MainMenu.OnInit += MainMenuInitHook;
+            ModHelper.Menus.PauseMenu.OnInit += PauseMenuInitHook;
             LoadManager.OnCompleteSceneLoad += (fromScene, toScene) => {
-                _menuOpen = false;
+                CloseMenu();
             };
+        }
+
+        private void PauseMenuInitHook()
+        {
+            IModButton editorButton = ModHelper.Menus.PauseMenu.OptionsButton.Duplicate("Edit Save Data".ToUpper());
+            editorButton.OnClick += EditorButtonClickCallback;
         }
 
         private void MainMenuInitHook()
         {
-            _hasEchoes = CheckForDLC();
             IModButton editorButton = ModHelper.Menus.MainMenu.SwitchProfileButton.Duplicate("Edit Save Data".ToUpper());
             editorButton.OnClick += EditorButtonClickCallback;
         }
@@ -76,7 +100,8 @@ namespace SaveEditor
         private void OnGUI()
         {
             if (!_menuOpen) return;
-            GUILayout.BeginArea(new Rect(10, 10, EditorMenuSize[0], EditorMenuSize[1]), _editorMenuStyle);
+            Vector2 menuPosition = GetMenuPosition();
+            GUILayout.BeginArea(new Rect(menuPosition.x, menuPosition.y, EditorMenuSize[0], EditorMenuSize[1]), _editorMenuStyle);
             // LOOP
             _saveData.loopCount = GUILayout.Toggle(_saveData.loopCount > 1, "Time Loop Started (Restart Required)") ? 10 : 1;
             // FLAGS
@@ -113,29 +138,26 @@ namespace SaveEditor
             else if (forgetAllSignalsClicked)
             {
                 _saveData.knownFrequencies = new[] {false, false, false, false, false, false, false};
-                foreach (SignalName signalsKey in AllSignals)
+                foreach (SignalName signal in AllSignals)
                 {
-                    _saveData.knownSignals[(int) signalsKey] = false;
+                    _saveData.knownSignals[(int) signal] = false;
                 }
             }
             else if (saveClicked)
             {
                 PlayerData._currentGameSave = _saveData;
                 PlayerData.SaveCurrentGame();
-                _saveData = null;
-                _menuOpen = false;
+                CloseMenu();
             }
             else if (cancelClicked)
             {
-                _saveData = null;
-                _menuOpen = false;
+                CloseMenu();
             }
         }
 
         private void EditorButtonClickCallback()
         {
-            _saveData = PlayerData._currentGameSave;
-            _menuOpen = true;
+            OpenMenu();
         }
     }
 }
