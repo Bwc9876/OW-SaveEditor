@@ -56,6 +56,9 @@ namespace SaveEditor
         private void Start()
         {
             ModHelper.Menus.MainMenu.OnInit += MainMenuInitHook;
+            LoadManager.OnCompleteSceneLoad += (fromScene, toScene) => {
+                _menuOpen = false;
+            };
         }
 
         private void MainMenuInitHook()
@@ -75,7 +78,7 @@ namespace SaveEditor
             if (!_menuOpen) return;
             GUILayout.BeginArea(new Rect(10, 10, EditorMenuSize[0], EditorMenuSize[1]), _editorMenuStyle);
             // LOOP
-            _saveData.loopCount = GUILayout.Toggle(_saveData.loopCount > 1, "Time Loop Started (Restart Required)") ? _saveData.loopCount + 1 : 1;
+            _saveData.loopCount = GUILayout.Toggle(_saveData.loopCount > 1, "Time Loop Started (Restart Required)") ? 10 : 1;
             // FLAGS
             ConditionToggle("Learned Launch Codes", "LAUNCH_CODES_GIVEN");
             ConditionToggle("Learned Meditation", "KNOWS_MEDITATION");
@@ -115,8 +118,7 @@ namespace SaveEditor
                     _saveData.knownSignals[(int)signalsKey] = false;
                 }
             }
-
-            if (saveClicked)
+            else if (saveClicked)
             {
                 PlayerData._currentGameSave = _saveData;
                 PlayerData.SaveCurrentGame();
