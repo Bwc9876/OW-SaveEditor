@@ -23,6 +23,16 @@ namespace SaveEditor
             SignalName.Quantum_TH_GroveShard, SignalName.Quantum_TH_MuseumShard
         };
 
+        private void OpenMenu(){
+            _menuOpen = true;
+            _saveData = PlayerData._currentGameSave;
+        }
+
+        private void CloseMenu(){
+            _menuOpen = false;
+            _saveData = null;
+        }
+
         private bool CheckForDLC()
         {
             return EntitlementsManager.IsDlcOwned() == EntitlementsManager.AsyncOwnershipStatus.Owned;
@@ -55,12 +65,19 @@ namespace SaveEditor
 
         private void Start()
         {
+            _hasEchoes = CheckForDLC();
             ModHelper.Menus.MainMenu.OnInit += MainMenuInitHook;
+            ModHelper.Menus.PauseMenu.OnInit += PauseMenuInitHook;
+        }
+
+        private void PauseMenuInitHook()
+        {
+            IModButton editorButton = ModHelper.Menus.PauseMenu.OptionsButton.Duplicate("Edit Save Data".ToUpper());
+            editorButton.OnClick += EditorButtonClickCallback;
         }
 
         private void MainMenuInitHook()
         {
-            _hasEchoes = CheckForDLC();
             IModButton editorButton = ModHelper.Menus.MainMenu.SwitchProfileButton.Duplicate("Edit Save Data".ToUpper());
             editorButton.OnClick += EditorButtonClickCallback;
         }
@@ -112,7 +129,7 @@ namespace SaveEditor
                 _saveData.knownFrequencies = new[] {false, false, false, false, false, false, false};
                 foreach (SignalName signalsKey in AllSignals)
                 {
-                    _saveData.knownSignals[(int)signalsKey] = false;
+                    _saveData.knownSignals[(int) signalsKey] = false;
                 }
             }
 
@@ -120,20 +137,17 @@ namespace SaveEditor
             {
                 PlayerData._currentGameSave = _saveData;
                 PlayerData.SaveCurrentGame();
-                _saveData = null;
-                _menuOpen = false;
+                CloseMenu();
             }
             else if (cancelClicked)
             {
-                _saveData = null;
-                _menuOpen = false;
+                CloseMenu();
             }
         }
 
         private void EditorButtonClickCallback()
         {
-            _saveData = PlayerData._currentGameSave;
-            _menuOpen = true;
+            OpenMenu();
         }
     }
 }
