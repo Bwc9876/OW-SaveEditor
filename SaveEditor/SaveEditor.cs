@@ -6,7 +6,7 @@ namespace SaveEditor
 {
     public class SaveEditor : ModBehaviour
     {
-        private static readonly int[] EditorMenuSize = {600, 260};
+        private static readonly Vector2 EditorMenuSize = new Vector2(600, 260);
 
         private bool _menuOpen;
         private bool _hasEchoes;
@@ -22,6 +22,11 @@ namespace SaveEditor
             SignalName.Quantum_BH_Shard, SignalName.Quantum_CT_Shard, SignalName.Quantum_GD_Shard,
             SignalName.Quantum_TH_GroveShard, SignalName.Quantum_TH_MuseumShard
         };
+
+        private Vector2 GetMenuPosition(){
+            Vector2 centerScreen = new Vector2(Screen.width / 2, Screen.Height / 2);
+            return new Vector2(centerScreen.x - (int)EditorMenuSize.x / 2, centerScreen.y - (int)EditorMenuSize.y / 2);
+        }
 
         private void OpenMenu(){
             _menuOpen = true;
@@ -40,14 +45,14 @@ namespace SaveEditor
         
         private Texture2D MakeMenuBackgroundTexture()
         {
-            Color[] pixels = new Color[EditorMenuSize[0]*EditorMenuSize[1]];
+            Color[] pixels = new Color[EditorMenuSize.x*EditorMenuSize.y];
  
             for(int i = 0; i < pixels.Length; i++)
             {
                 pixels[i] = Color.black;
             }
  
-            Texture2D newTexture = new Texture2D(EditorMenuSize[0], EditorMenuSize[1]);
+            Texture2D newTexture = new Texture2D(EditorMenuSize.x, EditorMenuSize.y);
             newTexture.SetPixels(pixels);
             newTexture.Apply();
  
@@ -95,7 +100,8 @@ namespace SaveEditor
         private void OnGUI()
         {
             if (!_menuOpen) return;
-            GUILayout.BeginArea(new Rect(10, 10, EditorMenuSize[0], EditorMenuSize[1]), _editorMenuStyle);
+            Vector2 menuPosition = GetMenuPosition();
+            GUILayout.BeginArea(new Rect(menuPosition.x, menuPosition.y, EditorMenuSize[0], EditorMenuSize[1]), _editorMenuStyle);
             // LOOP
             _saveData.loopCount = GUILayout.Toggle(_saveData.loopCount > 1, "Time Loop Started (Restart Required)") ? 10 : 1;
             // FLAGS
@@ -132,9 +138,9 @@ namespace SaveEditor
             else if (forgetAllSignalsClicked)
             {
                 _saveData.knownFrequencies = new[] {false, false, false, false, false, false, false};
-                foreach (SignalName signalsKey in AllSignals)
+                foreach (SignalName signal in AllSignals)
                 {
-                    _saveData.knownSignals[(int) signalsKey] = false;
+                    _saveData.knownSignals[(int) signal] = false;
                 }
             }
             else if (saveClicked)
