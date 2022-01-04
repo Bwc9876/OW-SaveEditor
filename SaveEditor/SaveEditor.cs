@@ -115,7 +115,7 @@ namespace SaveEditor
                 _saveData.knownFrequencies = new[] {false, false, false, false, false, false, false};
                 foreach (SignalName signalsKey in AllSignals)
                 {
-                    _saveData.knownSignals[(int)signalsKey] = false;
+                    _saveData.knownSignals[(int) signalsKey] = false;
                 }
             }
             else if (saveClicked)
