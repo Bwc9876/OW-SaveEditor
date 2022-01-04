@@ -38,18 +38,20 @@ namespace SaveEditor
             return EntitlementsManager.IsDlcOwned() == EntitlementsManager.AsyncOwnershipStatus.Owned;
         }
         
-        private Texture2D MakeTex(int width, int height, Color col)
+        private Texture2D MakeMenuBackgroundTexture()
         {
-            Color[] pix = new Color[width*height];
+            Color[] pixels = new Color[EditorMenuSize[0]*EditorMenuSize[1]];
  
-            for(int i = 0; i < pix.Length; i++)
-                pix[i] = col;
+            for(int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = Color.black;
+            }
  
-            Texture2D result = new Texture2D(width, height);
-            result.SetPixels(pix);
-            result.Apply();
+            Texture2D newTexture = new Texture2D(EditorMenuSize[0], EditorMenuSize[1]);
+            newTexture.SetPixels(pixels);
+            newTexture.Apply();
  
-            return result;
+            return newTexture;
         }
 
         private void Awake()
@@ -58,7 +60,7 @@ namespace SaveEditor
             {
                 normal =
                 {
-                    background = MakeTex(EditorMenuSize[0], EditorMenuSize[1], Color.black)
+                    background = MakeMenuBackgroundTexture()
                 }
             };
         }
