@@ -1,4 +1,5 @@
-﻿using OWML.ModHelper;
+﻿using System.Collections.Generic;
+using OWML.ModHelper;
 using OWML.Common.Menus;
 using UnityEngine;
 
@@ -6,10 +7,11 @@ namespace SaveEditor
 {
     public class SaveEditor : ModBehaviour
     {
-        private static readonly Vector2 EditorMenuSize = new Vector2(600, 260);
+        private static readonly Vector2 EditorMenuSize = new Vector2(600, 320);
 
         private bool _menuOpen;
         private bool _hasEchoes;
+        private bool _showShipLog;
         private GameSave _saveData;
         private GUIStyle _editorMenuStyle;
 
@@ -23,49 +25,47 @@ namespace SaveEditor
             SignalName.Quantum_TH_GroveShard, SignalName.Quantum_TH_MuseumShard
         };
 
-        private Vector2 GetMenuPosition(){
-            Vector2 centerScreen = new Vector2(Screen.width / 2, Screen.Height / 2);
-            return new Vector2(centerScreen.x - (int)EditorMenuSize.x / 2, centerScreen.y - (int)EditorMenuSize.y / 2);
-        }
-
         private void OpenMenu(){
+            _saveData = GameSave.FromJson(PlayerData._currentGameSave.ToJson());
+            _saveData.dictConditions = new Dictionary<string, bool>(PlayerData._currentGameSave.dictConditions);
+            MakeMenuStyle();
             _menuOpen = true;
-            _saveData = PlayerData._currentGameSave;
         }
 
         private void CloseMenu(){
-            _menuOpen = false;
             _saveData = null;
+            _menuOpen = false;
         }
 
         private bool CheckForDLC()
         {
             return EntitlementsManager.IsDlcOwned() == EntitlementsManager.AsyncOwnershipStatus.Owned;
         }
-        
-        private Texture2D MakeMenuBackgroundTexture()
+
+        private Texture2D MakeTexture(int width, int height, Color color)
         {
-            Color[] pixels = new Color[EditorMenuSize.x*EditorMenuSize.y];
+            Color[] pixels = new Color[width*height];
  
             for(int i = 0; i < pixels.Length; i++)
             {
-                pixels[i] = Color.black;
+                pixels[i] = color;
             }
  
-            Texture2D newTexture = new Texture2D(EditorMenuSize.x, EditorMenuSize.y);
+            Texture2D newTexture = new Texture2D(width, height);
             newTexture.SetPixels(pixels);
             newTexture.Apply();
- 
             return newTexture;
         }
-
-        private void Awake()
+        
+        private void MakeMenuStyle()
         {
+            Texture2D bgTexture = MakeTexture((int)EditorMenuSize.x, (int)EditorMenuSize.y, Color.black);
+
             _editorMenuStyle = new GUIStyle
             {
                 normal =
                 {
-                    background = MakeMenuBackgroundTexture()
+                    background = bgTexture
                 }
             };
         }
@@ -75,8 +75,10 @@ namespace SaveEditor
             _hasEchoes = CheckForDLC();
             ModHelper.Menus.MainMenu.OnInit += MainMenuInitHook;
             ModHelper.Menus.PauseMenu.OnInit += PauseMenuInitHook;
+            ModHelper.Menus.PauseMenu.OnClosed += CloseMenu;
             LoadManager.OnCompleteSceneLoad += (fromScene, toScene) => {
                 CloseMenu();
+                _showShipLog = toScene == OWScene.SolarSystem || toScene == OWScene.EyeOfTheUniverse;
             };
         }
 
@@ -100,8 +102,8 @@ namespace SaveEditor
         private void OnGUI()
         {
             if (!_menuOpen) return;
-            Vector2 menuPosition = GetMenuPosition();
-            GUILayout.BeginArea(new Rect(menuPosition.x, menuPosition.y, EditorMenuSize[0], EditorMenuSize[1]), _editorMenuStyle);
+            Vector2 menuPosition = new Vector2(Screen.width - EditorMenuSize.x - 10, 10);
+            GUILayout.BeginArea(new Rect(menuPosition.x, menuPosition.y, EditorMenuSize.x, EditorMenuSize.y), _editorMenuStyle);
             // LOOP
             _saveData.loopCount = GUILayout.Toggle(_saveData.loopCount > 1, "Time Loop Started (Restart Required)") ? 10 : 1;
             // FLAGS
@@ -111,7 +113,7 @@ namespace SaveEditor
             ConditionToggle("Met Solanum", "MET_SOLANUM");
             if (_hasEchoes) ConditionToggle("Met Prisoner", "MET_PRISONER");
             GUILayout.Space(5);
-            _saveData.warpedToTheEye = GUILayout.Toggle(_saveData.warpedToTheEye, "Warped To The Eye Of the Universe (RESTART REQUIRED OR PREPARE TO DIE)");
+            _saveData.warpedToTheEye = GUILayout.Toggle(_saveData.warpedToTheEye, "Warped To The Eye Of the Universe (Restart Required)");
             GUILayout.Space(5);
             // SIGNALS & FREQUENCIES
             GUILayout.Label("Signals & Frequencies");
@@ -119,6 +121,22 @@ namespace SaveEditor
             bool learnAllSignalsClicked = GUILayout.Button("Learn All");
             bool forgetAllSignalsClicked = GUILayout.Button("Forget All");
             GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            // SHIP LOG
+            GUILayout.Label("Ship Log");
+            bool learnShipLogClicked = false;
+            bool forgetShipLogClicked = false;
+            if (_showShipLog)
+            {
+                GUILayout.BeginHorizontal();
+                learnShipLogClicked = GUILayout.Button("Learn All");
+                forgetShipLogClicked = GUILayout.Button("Forget All (Restart Required)");
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.Label("   You can't edit the ship log on the title screen");
+            }
             GUILayout.Space(10);
             // BUTTONS
             bool saveClicked = GUILayout.Button("Save");
@@ -137,10 +155,25 @@ namespace SaveEditor
             }
             else if (forgetAllSignalsClicked)
             {
-                _saveData.knownFrequencies = new[] {false, false, false, false, false, false, false};
+                Locator.GetToolModeSwapper()?.GetSignalScope()?.SelectFrequency(SignalFrequency.Traveler);
+                if (Locator.GetToolModeSwapper()?.GetSignalScope()?.IsEquipped() == true) Locator.GetToolModeSwapper()?.UnequipTool();
+                _saveData.knownFrequencies = new[] {false, true, false, false, false, false, false};
                 foreach (SignalName signal in AllSignals)
                 {
                     _saveData.knownSignals[(int) signal] = false;
+                }
+            }
+            else if (learnShipLogClicked)
+            {
+                Locator.GetShipLogManager().RevealAllFacts();
+            }
+            else if (forgetShipLogClicked)
+            {
+                foreach (ShipLogFactSave savedFact in PlayerData._currentGameSave.shipLogFactSaves.Values)
+                {
+                    savedFact.newlyRevealed = false;
+                    savedFact.read = false;
+                    savedFact.revealOrder = -1;
                 }
             }
             else if (saveClicked)
@@ -157,7 +190,14 @@ namespace SaveEditor
 
         private void EditorButtonClickCallback()
         {
-            OpenMenu();
+            if (_menuOpen)
+            {
+                CloseMenu();
+            }
+            else
+            {
+                OpenMenu();  
+            }
         }
     }
 }
