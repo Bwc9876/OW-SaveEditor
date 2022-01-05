@@ -92,7 +92,7 @@ namespace SaveEditor
 
         private void ConditionToggle(string label, string key)
         {
-            PlayerData._currentGameSave.SetPersistentCondition(key, GUILayout.Toggle(_saveData.GetPersistentCondition(key), label));
+            PlayerData._currentGameSave.SetPersistentCondition(key, GUILayout.Toggle(PlayerData._currentGameSave.GetPersistentCondition(key), label));
         }
 
         private void OnGUI()
