@@ -100,8 +100,9 @@ namespace SaveEditor
             if (!_menuOpen) return;
             Vector2 menuPosition = new Vector2(Screen.width - EditorMenuSize.x - 10, 10);
             GUILayout.BeginArea(new Rect(menuPosition.x, menuPosition.y, EditorMenuSize.x, EditorMenuSize.y), _editorMenuStyle);
+            GUILayout.Label("*: Restart Required");
             // LOOP
-            PlayerData._currentGameSave.loopCount = GUILayout.Toggle(PlayerData._currentGameSave.loopCount > 1, "Time Loop Started (Restart Required)") ? 10 : 1;
+            PlayerData._currentGameSave.loopCount = GUILayout.Toggle(PlayerData._currentGameSave.loopCount > 1, "*Time Loop Started") ? 10 : 1;
             // FLAGS
             ConditionToggle("Learned Launch Codes", "LAUNCH_CODES_GIVEN");
             ConditionToggle("Learned Meditation", "KNOWS_MEDITATION");
@@ -109,7 +110,7 @@ namespace SaveEditor
             ConditionToggle("Met Solanum", "MET_SOLANUM");
             if (_hasEchoes) ConditionToggle("Met Prisoner", "MET_PRISONER");
             GUILayout.Space(5);
-            PlayerData._currentGameSave.warpedToTheEye = GUILayout.Toggle(PlayerData._currentGameSave.warpedToTheEye, "Warped To The Eye Of the Universe (Restart Required)");
+            PlayerData._currentGameSave.warpedToTheEye = GUILayout.Toggle(PlayerData._currentGameSave.warpedToTheEye, "*Warped To The Eye Of the Universe");
             GUILayout.Space(5);
             // SIGNALS & FREQUENCIES
             GUILayout.Label("Signals & Frequencies");
@@ -126,7 +127,7 @@ namespace SaveEditor
             {
                 GUILayout.BeginHorizontal();
                 learnShipLogClicked = GUILayout.Button("Learn All");
-                forgetShipLogClicked = GUILayout.Button("Forget All (Restart Required)");
+                forgetShipLogClicked = GUILayout.Button("*Forget All");
                 GUILayout.EndHorizontal();
             }
             else
