@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using OWML.ModHelper;
+﻿using OWML.ModHelper;
 using OWML.Common.Menus;
 using UnityEngine;
 
@@ -12,7 +11,6 @@ namespace SaveEditor
         private bool _menuOpen;
         private bool _hasEchoes;
         private bool _showShipLog;
-        private GameSave _saveData;
         private GUIStyle _editorMenuStyle;
 
         private static readonly SignalName[] AllSignals =
@@ -26,14 +24,11 @@ namespace SaveEditor
         };
 
         private void OpenMenu(){
-            _saveData = GameSave.FromJson(PlayerData._currentGameSave.ToJson());
-            _saveData.dictConditions = new Dictionary<string, bool>(PlayerData._currentGameSave.dictConditions);
             MakeMenuStyle();
             _menuOpen = true;
         }
 
         private void CloseMenu(){
-            _saveData = null;
             _menuOpen = false;
         }
 
@@ -96,7 +91,7 @@ namespace SaveEditor
 
         private void ConditionToggle(string label, string key)
         {
-            _saveData.SetPersistentCondition(key, GUILayout.Toggle(_saveData.GetPersistentCondition(key), label));
+            PlayerData._currentGameSave.SetPersistentCondition(key, GUILayout.Toggle(PlayerData._currentGameSave.GetPersistentCondition(key), label));
         }
 
         private void OnGUI()
@@ -104,8 +99,9 @@ namespace SaveEditor
             if (!_menuOpen) return;
             Vector2 menuPosition = new Vector2(Screen.width - EditorMenuSize.x - 10, 10);
             GUILayout.BeginArea(new Rect(menuPosition.x, menuPosition.y, EditorMenuSize.x, EditorMenuSize.y), _editorMenuStyle);
+            GUILayout.Label("*: Restart Required");
             // LOOP
-            _saveData.loopCount = GUILayout.Toggle(_saveData.loopCount > 1, "Time Loop Started (Restart Required)") ? 10 : 1;
+            PlayerData._currentGameSave.loopCount = GUILayout.Toggle(PlayerData._currentGameSave.loopCount > 1, "*Time Loop Started") ? 10 : 1;
             // FLAGS
             ConditionToggle("Learned Launch Codes", "LAUNCH_CODES_GIVEN");
             ConditionToggle("Learned Meditation", "KNOWS_MEDITATION");
@@ -113,7 +109,7 @@ namespace SaveEditor
             ConditionToggle("Met Solanum", "MET_SOLANUM");
             if (_hasEchoes) ConditionToggle("Met Prisoner", "MET_PRISONER");
             GUILayout.Space(5);
-            _saveData.warpedToTheEye = GUILayout.Toggle(_saveData.warpedToTheEye, "Warped To The Eye Of the Universe (Restart Required)");
+            PlayerData._currentGameSave.warpedToTheEye = GUILayout.Toggle(PlayerData._currentGameSave.warpedToTheEye, "*Warped To The Eye Of the Universe");
             GUILayout.Space(5);
             // SIGNALS & FREQUENCIES
             GUILayout.Label("Signals & Frequencies");
@@ -130,7 +126,7 @@ namespace SaveEditor
             {
                 GUILayout.BeginHorizontal();
                 learnShipLogClicked = GUILayout.Button("Learn All");
-                forgetShipLogClicked = GUILayout.Button("Forget All (Restart Required)");
+                forgetShipLogClicked = GUILayout.Button("*Forget All");
                 GUILayout.EndHorizontal();
             }
             else
@@ -139,28 +135,27 @@ namespace SaveEditor
             }
             GUILayout.Space(10);
             // BUTTONS
-            bool saveClicked = GUILayout.Button("Save");
-            bool cancelClicked = GUILayout.Button("Cancel");
+            bool closeClicked = GUILayout.Button("Close");
             GUILayout.EndArea();
             
             // BUTTON LOGIC
 
             if (learnAllSignalsClicked)
             {
-                _saveData.knownFrequencies = new[] {true, true, true, true, true, false, true};
+                PlayerData._currentGameSave.knownFrequencies = new[] {true, true, true, true, true, false, true};
                 foreach (SignalName signal in AllSignals)
                 {
-                    _saveData.knownSignals[(int) signal] = true;
+                    PlayerData._currentGameSave.knownSignals[(int) signal] = true;
                 }
             }
             else if (forgetAllSignalsClicked)
             {
                 Locator.GetToolModeSwapper()?.GetSignalScope()?.SelectFrequency(SignalFrequency.Traveler);
                 if (Locator.GetToolModeSwapper()?.GetSignalScope()?.IsEquipped() == true) Locator.GetToolModeSwapper()?.UnequipTool();
-                _saveData.knownFrequencies = new[] {false, true, false, false, false, false, false};
+                PlayerData._currentGameSave.knownFrequencies = new[] {false, true, false, false, false, false, false};
                 foreach (SignalName signal in AllSignals)
                 {
-                    _saveData.knownSignals[(int) signal] = false;
+                    PlayerData._currentGameSave.knownSignals[(int) signal] = false;
                 }
             }
             else if (learnShipLogClicked)
@@ -176,14 +171,9 @@ namespace SaveEditor
                     savedFact.revealOrder = -1;
                 }
             }
-            else if (saveClicked)
+            else if (closeClicked)
             {
-                PlayerData._currentGameSave = _saveData;
                 PlayerData.SaveCurrentGame();
-                CloseMenu();
-            }
-            else if (cancelClicked)
-            {
                 CloseMenu();
             }
         }
