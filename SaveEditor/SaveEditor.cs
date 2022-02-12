@@ -1,4 +1,5 @@
-﻿using OWML.ModHelper;
+﻿using System.Linq;
+using OWML.ModHelper;
 using OWML.Common.Menus;
 using UnityEngine;
 
@@ -6,21 +7,27 @@ namespace SaveEditor
 {
     public class SaveEditor : ModBehaviour
     {
-        private static readonly Vector2 EditorMenuSize = new Vector2(600, 320);
+        private static readonly Vector2 EditorMenuSize = new Vector2(600, 340);
 
         private bool _menuOpen;
         private bool _hasEchoes;
         private bool _showShipLog;
+        private string currentRevealFactID = "TH_VILLAGE_X1";
         private GUIStyle _editorMenuStyle;
 
-        private static readonly SignalName[] AllSignals =
+        private static readonly SignalName[] BaseGameSignals =
         {
-            SignalName.MapSatellite, SignalName.RadioTower, SignalName.Traveler_Chert, SignalName.Traveler_Esker,
-            SignalName.Traveler_Feldspar, SignalName.Traveler_Feldspar, SignalName.Traveler_Gabbro,
-            SignalName.Traveler_Nomai, SignalName.Traveler_Prisoner, SignalName.Traveler_Riebeck, SignalName.Quantum_QM,
+            SignalName.Traveler_Chert, SignalName.Traveler_Esker,
+            SignalName.Traveler_Feldspar, SignalName.Traveler_Gabbro,
+            SignalName.Traveler_Nomai, SignalName.Traveler_Prisoner, SignalName.Traveler_Riebeck,
             SignalName.Quantum_QM, SignalName.EscapePod_BH, SignalName.EscapePod_CT, SignalName.EscapePod_DB,
             SignalName.Quantum_BH_Shard, SignalName.Quantum_CT_Shard, SignalName.Quantum_GD_Shard,
             SignalName.Quantum_TH_GroveShard, SignalName.Quantum_TH_MuseumShard
+        };
+
+        private static readonly SignalName[] EchoesSignals =
+        {
+            SignalName.MapSatellite, SignalName.RadioTower
         };
 
         private void OpenMenu(){
@@ -115,18 +122,26 @@ namespace SaveEditor
             GUILayout.Label("Signals & Frequencies");
             GUILayout.BeginHorizontal();
             bool learnAllSignalsClicked = GUILayout.Button("Learn All");
+            bool learnJustBaseGameSignalsClicked = GUILayout.Button("Learn Just Base Game");
             bool forgetAllSignalsClicked = GUILayout.Button("Forget All");
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
             // SHIP LOG
             GUILayout.Label("Ship Log");
             bool learnShipLogClicked = false;
+            bool learnJustBaseGameShipLogClicked = false;
             bool forgetShipLogClicked = false;
+            bool learnSpecificFactClicked = false;
             if (_showShipLog)
             {
                 GUILayout.BeginHorizontal();
                 learnShipLogClicked = GUILayout.Button("Learn All");
+                learnJustBaseGameShipLogClicked = GUILayout.Button("Learn Just Base Game");
                 forgetShipLogClicked = GUILayout.Button("*Forget All");
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                currentRevealFactID = GUILayout.TextField(currentRevealFactID);
+                learnSpecificFactClicked = GUILayout.Button("Learn Fact");
                 GUILayout.EndHorizontal();
             }
             else
@@ -143,7 +158,15 @@ namespace SaveEditor
             if (learnAllSignalsClicked)
             {
                 PlayerData._currentGameSave.knownFrequencies = new[] {true, true, true, true, true, false, true};
-                foreach (SignalName signal in AllSignals)
+                foreach (SignalName signal in BaseGameSignals.Concat(EchoesSignals))
+                {
+                    PlayerData._currentGameSave.knownSignals[(int) signal] = true;
+                }
+            }
+            else if (learnJustBaseGameSignalsClicked)
+            {
+                PlayerData._currentGameSave.knownFrequencies = new[] {true, true, true, true, true, false, false};
+                foreach (SignalName signal in BaseGameSignals)
                 {
                     PlayerData._currentGameSave.knownSignals[(int) signal] = true;
                 }
@@ -153,7 +176,7 @@ namespace SaveEditor
                 Locator.GetToolModeSwapper()?.GetSignalScope()?.SelectFrequency(SignalFrequency.Traveler);
                 if (Locator.GetToolModeSwapper()?.GetSignalScope()?.IsEquipped() == true) Locator.GetToolModeSwapper()?.UnequipTool();
                 PlayerData._currentGameSave.knownFrequencies = new[] {false, true, false, false, false, false, false};
-                foreach (SignalName signal in AllSignals)
+                foreach (SignalName signal in BaseGameSignals)
                 {
                     PlayerData._currentGameSave.knownSignals[(int) signal] = false;
                 }
@@ -161,6 +184,24 @@ namespace SaveEditor
             else if (learnShipLogClicked)
             {
                 Locator.GetShipLogManager().RevealAllFacts();
+            }
+            else if (learnJustBaseGameShipLogClicked)
+            {
+                ShipLogManager manager = Locator.GetShipLogManager();
+                foreach (ShipLogEntry entry in manager._entryList)
+                {
+                    if (entry.GetCuriosityName() != CuriosityName.InvisiblePlanet)
+                    {
+                        foreach (ShipLogFact rumorFact in entry.GetRumorFacts())
+                        {
+                            manager.RevealFact(rumorFact.GetID());
+                        }
+                        foreach (ShipLogFact exploreFact in entry.GetExploreFacts())
+                        {
+                            manager.RevealFact(exploreFact.GetID());
+                        }
+                    }
+                }
             }
             else if (forgetShipLogClicked)
             {
@@ -170,6 +211,11 @@ namespace SaveEditor
                     savedFact.read = false;
                     savedFact.revealOrder = -1;
                 }
+            }
+            else if (learnSpecificFactClicked)
+            {
+                Locator.GetShipLogManager().RevealFact(currentRevealFactID, false, true);
+                currentRevealFactID = "";
             }
             else if (closeClicked)
             {
