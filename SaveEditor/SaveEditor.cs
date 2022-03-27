@@ -7,7 +7,7 @@ namespace SaveEditor
 {
     public class SaveEditor : ModBehaviour
     {
-        private static readonly Vector2 EditorMenuSize = new Vector2(600, 340);
+        private static readonly Vector2 EditorMenuSize = new Vector2(600, 900);
 
         private bool _menuOpen;
         private bool _hasEchoes;
@@ -111,6 +111,8 @@ namespace SaveEditor
             PlayerData._currentGameSave.loopCount = GUILayout.Toggle(PlayerData._currentGameSave.loopCount > 1, "*Time Loop Started") ? 10 : 1;
             // FLAGS
             ConditionToggle("Learned Launch Codes", "LAUNCH_CODES_GIVEN");
+            ConditionToggle("Ship Log Tutorial Done", "COMPLETED_SHIPLOG_TUTORIAL");
+            ConditionToggle("Mark on HUD Tutorial Done", "MARK_ON_HUD_TUTORIAL_COMPLETE");
             ConditionToggle("Learned Meditation", "KNOWS_MEDITATION");
             GUILayout.Space(5);
             ConditionToggle("Met Solanum", "MET_SOLANUM");
@@ -118,6 +120,8 @@ namespace SaveEditor
             GUILayout.Space(5);
             PlayerData._currentGameSave.warpedToTheEye = GUILayout.Toggle(PlayerData._currentGameSave.warpedToTheEye, "*Warped To The Eye Of the Universe");
             GUILayout.Space(5);
+            GUILayout.Label("Achievements");
+            bool earnAllAchievementsClicked = GUILayout.Button("Earn All");
             // SIGNALS & FREQUENCIES
             GUILayout.Label("Signals & Frequencies");
             GUILayout.BeginHorizontal();
@@ -216,6 +220,10 @@ namespace SaveEditor
             {
                 Locator.GetShipLogManager().RevealFact(currentRevealFactID, false, true);
                 currentRevealFactID = "";
+            }
+            else if (earnAllAchievementsClicked)
+            {
+                Achievements.AchieveAll();
             }
             else if (closeClicked)
             {
