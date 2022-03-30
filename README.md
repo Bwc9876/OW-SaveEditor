@@ -10,6 +10,7 @@ Once installed, "EDIT SAVE DATA" will appear on the title screen and pause menu,
 
 - Time loop started: Whether the time loop has begun (you need to relaunch the game after saving if you edit this)
 - Learned Launch Codes: Whether you have the launch codes for the ship
+- Earn All Achievements: Earns every achievement in the game if your platform supports it
 - Met Solanum: Whether you've encountered solanum in a previous loop
 - Met Prisoner: Whether you've met the prisoner in a previous loop
 - Warped To The Eye Of The Universe: Whether you've gotten to the eye of the universe (this also requires a relaunch of the game, otherwise say goodbye to your ears)
