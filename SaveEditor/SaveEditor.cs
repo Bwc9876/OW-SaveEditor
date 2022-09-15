@@ -117,6 +117,7 @@ namespace SaveEditor
             GUILayout.Space(5);
             ConditionToggle("Met Solanum", "MET_SOLANUM");
             if (_hasEchoes) ConditionToggle("Met Prisoner", "MET_PRISONER");
+            ConditionToggle("Paradox", "PLAYER_ENTERED_TIMELOOPCORE");
             GUILayout.Space(5);
             PlayerData._currentGameSave.warpedToTheEye = GUILayout.Toggle(PlayerData._currentGameSave.warpedToTheEye, "*Warped To The Eye Of the Universe");
             GUILayout.Space(5);
