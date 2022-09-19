@@ -39,7 +39,12 @@ namespace SaveEditor
             _menuOpen = false;
         }
 
-        private bool CheckForDLC()
+        private static bool IsEntitlementsManagerReady()
+        {
+            return EntitlementsManager.IsDlcOwned() != EntitlementsManager.AsyncOwnershipStatus.NotReady;
+        }
+
+        private static bool CheckForDLC()
         {
             return EntitlementsManager.IsDlcOwned() == EntitlementsManager.AsyncOwnershipStatus.Owned;
         }
@@ -74,7 +79,7 @@ namespace SaveEditor
 
         private void Start()
         {
-            _hasEchoes = CheckForDLC();
+            ModHelper.Events.Unity.RunWhen(IsEntitlementsManagerReady, () => _hasEchoes = CheckForDLC());
             ModHelper.Menus.MainMenu.OnInit += MainMenuInitHook;
             ModHelper.Menus.PauseMenu.OnInit += PauseMenuInitHook;
             ModHelper.Menus.PauseMenu.OnClosed += CloseMenu;
