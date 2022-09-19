@@ -124,7 +124,37 @@ namespace SaveEditor
             if (_hasEchoes) ConditionToggle("Met Prisoner", "MET_PRISONER");
             ConditionToggle("Paradox", "PLAYER_ENTERED_TIMELOOPCORE");
             GUILayout.Space(5);
-            PlayerData._currentGameSave.warpedToTheEye = GUILayout.Toggle(PlayerData._currentGameSave.warpedToTheEye, "*Warped To The Eye Of the Universe");
+            var warpToEyeBefore = PlayerData._currentGameSave.warpedToTheEye;
+            var warpToEyeToggle = GUILayout.Toggle(warpToEyeBefore, "*Warped To The Eye Of the Universe");
+            if (warpToEyeToggle != warpToEyeBefore)
+            {
+                if (warpToEyeToggle)
+                {
+                    PlayerData._currentGameSave.warpedToTheEye = true;
+                    PlayerData._currentGameSave.secondsRemainingOnWarp = 180;
+                }
+                else
+                {
+                    PlayerData._currentGameSave.warpedToTheEye = false;
+                }
+
+
+                if (LoadManager.GetCurrentScene() == OWScene.TitleScreen)
+                {
+                    var newGame = GameObject.Find("TitleMenu/TitleCanvas/TitleLayoutGroup/MainMenuBlock/MainMenuLayoutGroup/Button-NewGame")?.GetComponent<SubmitActionLoadScene>();
+                    var resumeGame = GameObject.Find("TitleMenu/TitleCanvas/TitleLayoutGroup/MainMenuBlock/MainMenuLayoutGroup/Button-ResumeGame")?.GetComponent<SubmitActionLoadScene>();
+                    if (warpToEyeToggle)
+                    {
+                        if (newGame != null) newGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.EYE;
+                        if (resumeGame != null) resumeGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.EYE;
+                    }
+                    else
+                    {
+                        if (newGame != null) newGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.GAME;
+                        if (resumeGame != null) resumeGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.GAME;
+                    }
+                }
+            }
             GUILayout.Space(5);
             GUILayout.Label("Achievements");
             bool earnAllAchievementsClicked = GUILayout.Button("Earn All");
