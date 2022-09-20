@@ -141,18 +141,11 @@ namespace SaveEditor
 
                 if (LoadManager.GetCurrentScene() == OWScene.TitleScreen)
                 {
+                    var sceneToLoad = warpToEyeToggle ? SubmitActionLoadScene.LoadableScenes.EYE : SubmitActionLoadScene.LoadableScenes.GAME;
                     var newGame = GameObject.Find("TitleMenu/TitleCanvas/TitleLayoutGroup/MainMenuBlock/MainMenuLayoutGroup/Button-NewGame")?.GetComponent<SubmitActionLoadScene>();
                     var resumeGame = GameObject.Find("TitleMenu/TitleCanvas/TitleLayoutGroup/MainMenuBlock/MainMenuLayoutGroup/Button-ResumeGame")?.GetComponent<SubmitActionLoadScene>();
-                    if (warpToEyeToggle)
-                    {
-                        if (newGame != null) newGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.EYE;
-                        if (resumeGame != null) resumeGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.EYE;
-                    }
-                    else
-                    {
-                        if (newGame != null) newGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.GAME;
-                        if (resumeGame != null) resumeGame._sceneToLoad = SubmitActionLoadScene.LoadableScenes.GAME;
-                    }
+                    if (newGame != null) newGame._sceneToLoad = sceneToLoad;
+                    if (resumeGame != null) resumeGame._sceneToLoad = sceneToLoad;
                 }
             }
             GUILayout.Space(5);
