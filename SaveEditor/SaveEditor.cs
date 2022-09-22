@@ -39,7 +39,12 @@ namespace SaveEditor
             _menuOpen = false;
         }
 
-        private bool CheckForDLC()
+        private static bool IsEntitlementsManagerReady()
+        {
+            return EntitlementsManager.IsDlcOwned() != EntitlementsManager.AsyncOwnershipStatus.NotReady;
+        }
+
+        private static bool CheckForDLC()
         {
             return EntitlementsManager.IsDlcOwned() == EntitlementsManager.AsyncOwnershipStatus.Owned;
         }
@@ -74,7 +79,7 @@ namespace SaveEditor
 
         private void Start()
         {
-            _hasEchoes = CheckForDLC();
+            ModHelper.Events.Unity.RunWhen(IsEntitlementsManagerReady, () => _hasEchoes = CheckForDLC());
             ModHelper.Menus.MainMenu.OnInit += MainMenuInitHook;
             ModHelper.Menus.PauseMenu.OnInit += PauseMenuInitHook;
             ModHelper.Menus.PauseMenu.OnClosed += CloseMenu;
@@ -119,7 +124,30 @@ namespace SaveEditor
             if (_hasEchoes) ConditionToggle("Met Prisoner", "MET_PRISONER");
             ConditionToggle("Paradox", "PLAYER_ENTERED_TIMELOOPCORE");
             GUILayout.Space(5);
-            PlayerData._currentGameSave.warpedToTheEye = GUILayout.Toggle(PlayerData._currentGameSave.warpedToTheEye, "*Warped To The Eye Of the Universe");
+            var warpToEyeBefore = PlayerData._currentGameSave.warpedToTheEye;
+            var warpToEyeToggle = GUILayout.Toggle(warpToEyeBefore, "*Warped To The Eye Of the Universe");
+            if (warpToEyeToggle != warpToEyeBefore)
+            {
+                if (warpToEyeToggle)
+                {
+                    PlayerData._currentGameSave.warpedToTheEye = true;
+                    PlayerData._currentGameSave.secondsRemainingOnWarp = 180;
+                }
+                else
+                {
+                    PlayerData._currentGameSave.warpedToTheEye = false;
+                }
+
+
+                if (LoadManager.GetCurrentScene() == OWScene.TitleScreen)
+                {
+                    var sceneToLoad = warpToEyeToggle ? SubmitActionLoadScene.LoadableScenes.EYE : SubmitActionLoadScene.LoadableScenes.GAME;
+                    var newGame = GameObject.Find("TitleMenu/TitleCanvas/TitleLayoutGroup/MainMenuBlock/MainMenuLayoutGroup/Button-NewGame")?.GetComponent<SubmitActionLoadScene>();
+                    var resumeGame = GameObject.Find("TitleMenu/TitleCanvas/TitleLayoutGroup/MainMenuBlock/MainMenuLayoutGroup/Button-ResumeGame")?.GetComponent<SubmitActionLoadScene>();
+                    if (newGame != null) newGame._sceneToLoad = sceneToLoad;
+                    if (resumeGame != null) resumeGame._sceneToLoad = sceneToLoad;
+                }
+            }
             GUILayout.Space(5);
             GUILayout.Label("Achievements");
             bool earnAllAchievementsClicked = GUILayout.Button("Earn All");
